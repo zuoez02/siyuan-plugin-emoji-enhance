@@ -68,6 +68,20 @@ type doOperation = {
     retData: null;
 }
 
+type EmojiItem = {
+    description: string;
+    description_zh_cn: string;
+    keywords: string;
+    unicode: string;
+}
+
+type EmojiGroup = {
+    id: string;
+    items: EmojiItem[];
+    title: string;
+    title_zh_cn: string;
+}
+
 interface Window {
     siyuan: {
         notebooks: any;
@@ -78,5 +92,6 @@ interface Window {
         user: any;
         ws: any;
         languages: any;
+        emojis: EmojiGroup[];
     };
 }

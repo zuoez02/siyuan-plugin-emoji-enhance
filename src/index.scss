@@ -1,26 +1,18 @@
-#helloPanel {
-    border: 1px rgb(189, 119, 119) dashed;
+.block__icon1 {
+    color: var(--b3-theme-on-surface);
+    cursor: pointer;
+    border: 0;
+    background: rgba(0,0,0,0);
+    flex-shrink: 0;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    border-radius: var(--b3-border-radius);
+    transition: var(--b3-transition),opacity .3s cubic-bezier(0, 0, 0.2, 1) 0ms;
+    line-height: 14px;
 }
 
-.plugin-sample {
-    &__custom-tab {
-        background-color: var(--b3-theme-background);
-        height: 100%;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    &__custom-dock {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    &__time {
-        background: var(--b3-card-info-background);
-        border-radius: 4px;
-        padding: 2px 8px;
-    }
+.block__icon1 svg {
+    height: 14px;
+    width: 14px;
 }

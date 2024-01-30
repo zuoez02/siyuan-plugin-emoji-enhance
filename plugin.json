@@ -1,8 +1,8 @@
 {
-  "name": "plugin-sample-vite-svelte",
-  "author": "frostime",
-  "url": "https://github.com/siyuan-note/plugin-sample-vite-svelte",
-  "version": "0.3.2",
+  "name": "siyuan-plugin-emoji-enhance",
+  "author": "zuoez02",
+  "url": "https://github.com/zuoez02/siyuan-plugin-emoji-enhance",
+  "version": "0.1.0",
   "minAppVersion": "2.12.1",
   "backends": [
     "windows",
@@ -19,12 +19,12 @@
     "desktop-window"
   ],
   "displayName": {
-    "en_US": "Plugin sample with vite and svelte",
-    "zh_CN": "插件样例 vite + svelte 版"
+    "en_US": "Emoji Enhance",
+    "zh_CN": "Emoji增强"
   },
   "description": {
-    "en_US": "SiYuan plugin sample with vite and svelte",
-    "zh_CN": "使用 vite 和 svelte 开发的思源插件样例"
+    "en_US": "SiYuan Emoji Enhance",
+    "zh_CN": "Emoji功能优化与增强"
   },
   "readme": {
     "en_US": "README.md",
@@ -32,10 +32,10 @@
   },
   "funding": {
     "custom": [
-      "https://afdian.net/a/frostime"
+      "https://afdian.net/a/zuoez02"
     ]
   },
   "keywords": [
-    "plugin", "sample", "插件样例"
+    "emoji"
   ]
 }
