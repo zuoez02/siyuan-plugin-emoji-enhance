@@ -11,8 +11,9 @@ export default class EmojiEnhancePlugin extends Plugin {
                     continue;
                 }
                 for (const node of mutation.addedNodes) {
-                    if ((node as HTMLElement).getAttribute('data-key') === 'dialog-emojis') {
-                        const container = (node as HTMLElement).querySelector('.emojis');
+                    const n = (node as HTMLElement);
+                    if (n.getAttribute('data-key') === 'dialog-emojis') {
+                        const container = n.querySelector('.emojis');
                         this.setupContainer(container as HTMLElement);
                     }
                 }
@@ -24,44 +25,80 @@ export default class EmojiEnhancePlugin extends Plugin {
         rootObserver.observe(document.body, config);
 
         this.unloadActions.push(() => rootObserver.disconnect());
+
+        const protyleObserver = new MutationObserver((mutationList) => {
+            for (const mutation of mutationList) {
+                for (const node of mutation.addedNodes) {
+                    const n = (node as HTMLElement);
+                    console.log(n, n.classList.contains('emojis'));
+                    if (n.classList.contains('emojis')) {
+                        this.setupContainer(n);
+                    }
+                }
+            }
+        })
+
+        this.eventBus.on('loaded-protyle-static', (event) => {
+            const hint = event.detail.protyle.hint;
+            console.log(hint);
+            if (hint) {
+                protyleObserver.observe(hint.element, config);
+                this.unloadActions.push(() => protyleObserver.disconnect);
+            }
+        });
     }
 
     unloadListeners() {
         this.unloadActions.forEach((f) => f());
     }
 
-    setupContainer(container: HTMLElement) {
-        const searchBar = container.children[0] as HTMLDivElement;
-        const emojiPanel = container.children[1] as HTMLDivElement;
-        // const bottomBar = container.children[2] as HTMLDivElement;
+    onunload(): void {
+        this.unloadListeners();
+    }
 
-        searchBar.insertAdjacentHTML('beforeend', `
+    setupContainer(container: HTMLElement) {
+        let searchBar: HTMLDivElement, emojiPanel: HTMLDivElement, bottomBar: HTMLDivElement;
+        if (container.children.length === 3) {
+            searchBar = container.children[0] as HTMLDivElement;
+        }
+        emojiPanel = container.querySelector('.emojis__panel')
+        bottomBar = emojiPanel.nextElementSibling as HTMLDivElement;
+
+        if (searchBar) {
+            searchBar.insertAdjacentHTML('beforeend', `
         <span id="uploadButton" class="block__icon1 block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.upload}"><svg><use xlink:href="#iconUpload"></use></svg></span>
         <span class="fn__space"></span>
         <input type="file" id="uploadEmoji" multiple accept="image/*" style="display:none" />
         <span id="refreshButton" class="block__icon1 block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.refresh}"><svg><use xlink:href="#iconEmoji"></use></svg></span>
         <span class="fn__space"></span>`)
 
-        const refreshButton = searchBar.querySelector('#refreshButton');
-        refreshButton.addEventListener('click', async () => {
-            const customPanel = emojiPanel.querySelector('div[data-type="1"]').nextElementSibling as HTMLDivElement;
-            await this.updateCustomEmojiPanel(customPanel, true);
-        });
+            const refreshButton = searchBar.querySelector('#refreshButton');
+            refreshButton.addEventListener('click', async () => {
+                const customPanel = emojiPanel.querySelector('div[data-type="1"]').nextElementSibling as HTMLDivElement;
+                await this.updateCustomEmojiPanel(customPanel, true);
+            });
 
-        const uploadButton = searchBar.querySelector('#uploadButton');
-        const uploadFileEl = searchBar.querySelector('#uploadEmoji') as HTMLInputElement;
-        uploadButton.addEventListener('click', () => {
-            uploadFileEl.click();
-        });
+            const uploadButton = searchBar.querySelector('#uploadButton');
+            const uploadFileEl = searchBar.querySelector('#uploadEmoji') as HTMLInputElement;
+            uploadButton.addEventListener('click', () => {
+                uploadFileEl.click();
+            });
 
-        uploadFileEl.addEventListener('change', async () => {
-            const files = [...uploadFileEl.files];
-            uploadFileEl.value = "";
-            await this.uploadEmoji(files);
-            await this.refreshEmojis();
-            const customPanel = emojiPanel.querySelector('div[data-type="1"]').nextElementSibling as HTMLDivElement;
-            await this.updateCustomEmojiPanel(customPanel);
-        });
+            uploadFileEl.addEventListener('change', async () => {
+                const files = [...uploadFileEl.files];
+                uploadFileEl.value = "";
+                await this.uploadEmoji(files);
+                await this.refreshEmojis();
+                const customPanel = emojiPanel.querySelector('div[data-type="1"]').nextElementSibling as HTMLDivElement;
+                await this.updateCustomEmojiPanel(customPanel);
+            });
+
+        }
+
+        const customGroups = this.sortGroups(emojiPanel.querySelector('div[data-type="1"]').nextElementSibling as HTMLDivElement);
+        if (emojiPanel && bottomBar) {
+            this.setBottomGroup(bottomBar, customGroups);
+        }
     }
 
     uploadEmoji(files: File[]) {
@@ -83,14 +120,17 @@ export default class EmojiEnhancePlugin extends Plugin {
         }
         const emojis = window.siyuan.emojis;
         const custom = emojis.find(v => v.id === 'custom');
+        this.resetCustomGroups(root);
         if (custom.items.length === 0) {
-            root.setAttribute('style', 'min-height: 28px'); 
+            root.setAttribute('style', 'min-height: 28px');
             root.innerHTML = `<div style="margin-left: 4px">${window.siyuan.languages.setEmojiTip}</div>`;
         } else {
-            root.setAttribute('style', ''); 
+            root.setAttribute('style', '');
             root.innerHTML = custom.items.map((v) => {
                 return `<button class="emojis__item ariaLabel" aria-label="${v.description}" data-unicode="${v.unicode}"><img src="/emojis/${v.unicode}" /></button>`
             }).join('')
+            const customGroups = this.sortGroups(root);
+            this.setBottomGroup(root.parentElement.nextElementSibling as HTMLDivElement, customGroups);
         }
     }
 
@@ -99,6 +139,75 @@ export default class EmojiEnhancePlugin extends Plugin {
             method: 'POST',
         }).then(res => res.json()).then((data) => {
             window.siyuan.emojis = data.data;
+        });
+    }
+
+    resetCustomGroups(root: HTMLDivElement) {
+        root.parentElement.querySelectorAll('.custom-group').forEach((g) => {
+            g.nextElementSibling.remove();
+            g.remove();
+        })
+    }
+
+    sortGroups(root: HTMLDivElement) {
+        const groups: Map<string, HTMLButtonElement[]> = new Map();
+        const noGroupButtons = [];
+        root.querySelectorAll('button').forEach((button) => {
+            const unicode = button.getAttribute('data-unicode');
+            const path = unicode.split('/');
+            if (path.length === 2) {
+                const group = path[0];
+                if (groups.has(group)) {
+                    groups.get(group).push(button);
+                } else {
+                    groups.set(group, [button]);
+                }
+            } else {
+                noGroupButtons.push(button);
+            }
+        });
+        if (groups.size === 0) {
+            return null;
+        }
+        groups.forEach((buttons, group) => {
+            const head = document.createElement('div');
+            head.classList.add('emojis__title', 'custom-group');
+            head.setAttribute('data-type', group);
+            head.textContent = group;
+            const emojis = document.createElement('div');
+            emojis.classList.add('emojis__content');
+            buttons.forEach(b => emojis.appendChild(b));
+            root.insertAdjacentElement('afterend', emojis);
+            root.insertAdjacentElement('afterend', head);
+        });
+        return groups;
+    }
+
+    setBottomGroup(bottomBar: HTMLDivElement, groups: Map<string, HTMLButtonElement[]> | null) {
+        if (!bottomBar) {
+            return;
+        }
+        bottomBar.querySelectorAll('.custom-emoji-type').forEach(c => c.remove());
+        if (!groups) {
+            return;
+        }
+        const custom = bottomBar.querySelector('.emojis__type[data-type="1"]');
+        groups.forEach((buttons, group) => {
+            const newType = document.createElement('div');
+            newType.classList.add('emojis__type', 'ariaLabel', 'custom-emoji-type');
+            newType.setAttribute('data-type', group);
+            newType.setAttribute('aria-label', group);
+            let button = buttons.find((b) => {
+                const dataUnicode = b.getAttribute('data-unicode');
+                const t = dataUnicode.split('/')[1].split('.');
+                const name = t.splice(t.length - 1, 1).join('');
+                return name === 'thumb';
+            }) || buttons[0];
+            const dataUnicode = button.getAttribute('data-unicode');
+            const url = `/emojis/${dataUnicode}`;
+            const icon = `<img src="${url}">`
+            newType.innerHTML = icon;
+            custom.insertAdjacentElement('afterend', newType);
         });
     }
 }
