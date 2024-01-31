@@ -2,7 +2,7 @@
   "name": "siyuan-plugin-emoji-enhance",
   "author": "zuoez02",
   "url": "https://github.com/zuoez02/siyuan-plugin-emoji-enhance",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "minAppVersion": "2.12.1",
   "backends": [
     "windows",

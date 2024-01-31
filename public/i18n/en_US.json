@@ -1,4 +1,7 @@
 {
     "confirm": "Confirm",
+    "downloadFailed": "Download failed",
+    "saveFailed": "Save emoji failed",
+    "notAnImage": "The file is not an image",
     "loadFromUrl": "Load from URL"
 }

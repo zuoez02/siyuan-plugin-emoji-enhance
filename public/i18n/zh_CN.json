@@ -1,4 +1,7 @@
 {
     "confirm": "确定",
+    "downloadFailed": "下载失败",
+    "saveFailed": "保存失败",
+    "notAnImage": "此文件不是图片",
     "loadFromUrl": "从链接下载"
 }

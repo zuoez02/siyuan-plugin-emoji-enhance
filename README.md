@@ -13,6 +13,8 @@ A plugin designed to optimize Emoji management interaction.
 + Emoji store
 
 ## Changelog
++ v0.3.1: Change ramdom icon and refresh icon, fix styles
+
 + v0.3.0: Support download image from URL
 
 + v0.2.1: Open Docker support
