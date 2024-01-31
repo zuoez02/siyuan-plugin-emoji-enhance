@@ -14,6 +14,7 @@ A plugin designed to optimize Emoji management interaction.
 + Emoji store
 
 ## Changelog
++ v0.2.1: Open Docker support
 
 + v0.2.0: Support custom emojis groups
 
