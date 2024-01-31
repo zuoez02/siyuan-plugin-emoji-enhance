@@ -1,4 +1,4 @@
-import { Plugin } from 'siyuan';
+import { Dialog, Plugin, showMessage } from 'siyuan';
 import "./index.scss";
 
 export default class EmojiEnhancePlugin extends Plugin {
@@ -30,7 +30,6 @@ export default class EmojiEnhancePlugin extends Plugin {
             for (const mutation of mutationList) {
                 for (const node of mutation.addedNodes) {
                     const n = (node as HTMLElement);
-                    console.log(n, n.classList.contains('emojis'));
                     if (n.classList.contains('emojis')) {
                         this.setupContainer(n);
                     }
@@ -40,7 +39,6 @@ export default class EmojiEnhancePlugin extends Plugin {
 
         this.eventBus.on('loaded-protyle-static', (event) => {
             const hint = event.detail.protyle.hint;
-            console.log(hint);
             if (hint) {
                 protyleObserver.observe(hint.element, config);
                 this.unloadActions.push(() => protyleObserver.disconnect);
@@ -70,7 +68,29 @@ export default class EmojiEnhancePlugin extends Plugin {
         <span class="fn__space"></span>
         <input type="file" id="uploadEmoji" multiple accept="image/*" style="display:none" />
         <span id="refreshButton" class="block__icon1 block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.refresh}"><svg><use xlink:href="#iconEmoji"></use></svg></span>
+        <span class="fn__space"></span>
+        <span id="urlButton" class="block__icon1 block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${this.i18n.loadFromUrl}"><svg><use xlink:href="#iconLanguage"></use></svg></span>
         <span class="fn__space"></span>`)
+
+            const urlButton = searchBar.querySelector('#urlButton');
+            urlButton.addEventListener('click', async () => {
+                const result = await this.readUrlFromDialog();
+                if (!result) {
+                    return;
+                }
+                const url = result.value;
+                const file = await this.downloadImage(url);
+                if (!file) {
+                    return;
+                }
+                const success = await this.saveImage(file);
+                if (!success) {
+                    return;
+                }
+                await this.refreshEmojis();
+                const customPanel = emojiPanel.querySelector('div[data-type="1"]').nextElementSibling as HTMLDivElement;
+                await this.updateCustomEmojiPanel(customPanel);
+            });
 
             const refreshButton = searchBar.querySelector('#refreshButton');
             refreshButton.addEventListener('click', async () => {
@@ -209,5 +229,69 @@ export default class EmojiEnhancePlugin extends Plugin {
             newType.innerHTML = icon;
             custom.insertAdjacentElement('afterend', newType);
         });
+    }
+
+    async readUrlFromDialog(): Promise<{ value: string }> {
+        return new Promise((resolve) => {
+            const d = new Dialog({
+                transparent: true,
+                content: `<div class="b3-dialog-content" style="padding: 12px"><input id="emojiUrl" type="text" class="b3-input" style="width: 300px"><button id="confirm">${this.i18n.confirm}</button></div>`,
+                disableAnimation: true,
+                destroyCallback(options: { value: string } | null) {
+                    resolve(options);
+                },
+            });
+
+
+            const input = d.element.querySelector('#emojiUrl') as HTMLInputElement;
+            input.focus();
+            input.addEventListener('keyup', (e: KeyboardEvent) => {
+                if (e.key.toLowerCase() === 'enter') {
+                    d.destroy({ value: input.value });
+                }
+            });
+            const button = d.element.querySelector('#confirm') as HTMLButtonElement;
+            button.addEventListener('click', () => {
+                d.destroy({ value: input.value });
+            });
+        })
+    }
+
+    async downloadImage(url) {
+        if (!url) {
+            return null;
+        }
+        return fetch(url).then(res => {
+            if (res.headers.get('Content-Type').startsWith('image/')) {
+                return res.blob();
+            }
+            throw Error('not an image');
+        }).then((blob) => {
+            const type = blob.type;
+            return new File([blob], (window.Lute as any).NewNodeID() + '.' + type.split('/')[1]);
+        }).catch((e) => {
+            showMessage('emoji enhance: Download failed: ' + e);
+            return null;
+        })
+    }
+
+    async saveImage(file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('isDir', 'false');
+        formData.append('path', '/data/emojis/' + file.name);
+        return fetch('/api/file/putFile', {
+            method: 'POST',
+            body: formData,
+        }).then((res) => res.json()).then((res) => {
+            if (res.code !== 0) {
+                showMessage('emoji enhance: Save emoji failed');
+                return false;
+            }
+            return true;
+        }).catch((e) => {
+            showMessage('emoji enhance: Save emoji failed');
+            return false;
+        })
     }
 }
