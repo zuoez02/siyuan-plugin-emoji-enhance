@@ -16,7 +16,7 @@ export default class EmojiEnhancePlugin extends Plugin {
                 }
                 for (const node of mutation.addedNodes) {
                     const n = (node as HTMLElement);
-                    if (n.getAttribute('data-key') === 'dialog-emojis') {
+                    if (n?.getAttribute('data-key') === 'dialog-emojis') {
                         const container = n.querySelector('.emojis');
                         this.setupContainer(container as HTMLElement);
                     }
@@ -62,20 +62,19 @@ export default class EmojiEnhancePlugin extends Plugin {
         let searchBar: HTMLDivElement, emojiPanel: HTMLDivElement, bottomBar: HTMLDivElement;
         if (container.children.length === 3) {
             searchBar = container.children[0] as HTMLDivElement;
+        } else {
+            searchBar = container.querySelector('.emojis__tabheader')
         }
         emojiPanel = container.querySelector('.emojis__panel')
         bottomBar = emojiPanel.nextElementSibling as HTMLDivElement;
 
         if (searchBar) {
-            searchBar.querySelectorAll('.block__icon')[0].querySelector('use').setAttribute('xlink:href', '#iconRandom');
             searchBar.insertAdjacentHTML('beforeend', `
-        <span id="uploadButton" class="block__icon1 block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.upload}"><svg><use xlink:href="#iconUpload"></use></svg></span>
-        <span class="fn__space"></span>
+        <span id="uploadButton" class="block__icon block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.upload}"><svg><use xlink:href="#iconUpload"></use></svg></span>
         <input type="file" id="uploadEmoji" multiple accept="image/*" style="display:none" />
-        <span id="refreshButton" class="block__icon1 block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.refresh}"><svg><use xlink:href="#iconRefresh"></use></svg></span>
-        <span class="fn__space"></span>
-        <span id="urlButton" class="block__icon1 block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${this.i18n.loadFromUrl}"><svg><use xlink:href="#iconLanguage"></use></svg></span>
-        <span class="fn__space"></span>`)
+        <span id="refreshButton" class="block__icon block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.refresh}"><svg><use xlink:href="#iconRefresh"></use></svg></span>
+        <span id="urlButton" class="block__icon block__icon--show fn__flex-center b3-tooltips b3-tooltips__sw" aria-label="${this.i18n.loadFromUrl}"><svg><use xlink:href="#iconLanguage"></use></svg></span>
+        `)
 
             const urlButton = searchBar.querySelector('#urlButton');
             urlButton.addEventListener('click', async (e: MouseEvent) => {
