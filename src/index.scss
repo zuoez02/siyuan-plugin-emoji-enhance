@@ -26,3 +26,8 @@
 .emojis__type {
     min-width: 28px;
 }
+
+.emojis__panel+.fn__flex {
+    max-width: 100%;
+    overflow: auto;
+}
