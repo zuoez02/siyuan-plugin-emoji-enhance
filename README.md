@@ -13,6 +13,8 @@ A plugin designed to optimize Emoji management interaction.
 + Emoji store
 
 ## Changelog
++ v0.3.4: Fix Style bug [0.3.3版在文档内无法显示表情分组 #6](https://github.com/zuoez02/siyuan-plugin-emoji-enhance/issues/6)
+
 + v0.3.3: Fix style bug
 
 + v0.3.2: Fix after siyuan 3.1.13
