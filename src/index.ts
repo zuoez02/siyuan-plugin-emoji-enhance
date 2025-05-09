@@ -204,6 +204,14 @@ export default class EmojiEnhancePlugin extends Plugin {
             root.insertAdjacentElement('afterend', emojis);
             root.insertAdjacentElement('afterend', head);
         });
+        if (noGroupButtons.length === 0) {
+            console.log(root);
+            root.parentElement.querySelector('.emojis__title[data-type="1"]')?.setAttribute('style', 'display: none');
+            root.setAttribute('style', 'display: none');
+        } else {
+            root.parentElement.querySelector('.emojis__title[data-type="1"]')?.setAttribute('style', 'display: block');
+            root.setAttribute('style', 'display: block');
+        }
         return groups;
     }
 
